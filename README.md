@@ -18,7 +18,7 @@ uv sync
 1. make .env file and add the secrets variables from .env.example with your own values
 
 # Run
-1. Run the app:
+1. Run the app and access it on port 8000
 ```
 uv run uvicorn api:app
 ```
