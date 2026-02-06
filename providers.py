@@ -67,14 +67,7 @@ class AzureOpenAiProvider(OpenAiProvider):
 
 
 def get_provider() -> Provider:
-    """Factory function to get the appropriate provider instance.
     
-    Args:
-        provider_name: Name of the provider (e.g., 'openai', 'azure')
-    
-    Returns:
-        Provider: An instance of the requested provider
-    """
     load_dotenv()
     provider_name = os.getenv("PROVIDER")
     if provider_name == "openai":
