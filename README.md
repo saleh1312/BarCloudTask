@@ -1,6 +1,10 @@
 # Demo
 Demo video: 
-static/demo.mp4
+
+
+https://github.com/user-attachments/assets/6c255887-ac7f-44ea-9f0f-8c4c1599965a
+
+
 
 # Install
 1. install uv
