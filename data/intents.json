@@ -1,0 +1,70 @@
+[
+    {
+        "intent": "ASSETS_COUNT",
+        "summary": "Count the total number of assets that are not disposed.",
+        "sql_query": "SELECT COUNT(*) AS AssetCount FROM Assets WHERE Status <> 'Disposed'",
+        "params": {},
+        "answer": "The total number of assets not disposed."
+    },
+    {
+        "intent": "ASSET_VALUE_BY_SITE",
+        "summary": "Count the total value of assets by site.",
+        "sql_query": "SELECT s.SiteName, SUM(a.Cost) AS TotalValue FROM Assets a JOIN Sites s ON a.SiteId = s.SiteId GROUP BY s.SiteName",
+        "params": {},
+        "answer": "Total asset value for."
+    },
+    {
+        "intent": "ASSETS_PURCHASED_IN_PERIOD",
+        "summary": "Count the total number of assets purchased in a specific period.",
+        "sql_query": "SELECT COUNT(*) AS AssetCount FROM Assets WHERE PurchaseDate BETWEEN {StartDate} AND {EndDate}",
+        "params": {
+            "StartDate": "YYYY-MM-DD",
+            "EndDate": "YYYY-MM-DD"
+        }
+        ,
+        "answer": "Total assets purchased between {StartDate} and {EndDate}."
+    },
+    {
+        "intent": "TOP_VENDOR_BY_ASSETS",
+        "summary": "Get the vendor with the highest total asset value.",
+        "sql_query": "SELECT v.VendorName, SUM(a.Cost) AS TotalValue FROM Assets a JOIN Vendors v ON a.VendorId = v.VendorId GROUP BY v.VendorName ORDER BY TotalValue DESC OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY",
+        "params": {},
+        "answer": "Top vendor by asset value is."
+    },
+    {
+        "intent": "TOTAL_BILLED_AMOUNT_IN_PERIOD",
+        "summary": "Count the total billed amount of assets in a specific period.",
+        "sql_query": "SELECT SUM(TotalAmount) AS TotalBilledAmount FROM Bills WHERE BillDate BETWEEN {StartDate} AND {EndDate}",
+        "params": {
+            "StartDate": "YYYY-MM-DD",
+            "EndDate": "YYYY-MM-DD"
+        }
+        ,
+        "answer": "Total billed amount between {StartDate} and {EndDate}."
+    },
+    {
+        "intent": "OPEN_PURCHASE_ORDERS",
+        "summary": "Count the total value of open purchase orders.",
+        "sql_query": "SELECT COUNT(*) AS OpenPurchaseOrders FROM PurchaseOrders WHERE Status = 'Open'",
+        "params": {},
+        "answer": "Total open purchase orders."
+    },
+    {
+        "intent": "ASSETS_BY_CATEGORY",
+        "summary": "Count the total number of assets by category.",
+        "sql_query": "SELECT Category, COUNT(*) AS AssetCount FROM Assets GROUP BY Category",
+        "params": {},
+        "answer": "Assets in category."
+    },
+    {
+        "intent": "SALES_ORDERS_BY_CUSTOMER_IN_PERIOD",
+        "summary": "Count the total value of sales orders by customer in a specific period.",
+        "sql_query": "SELECT c.CustomerName, SUM(sol.Quantity * sol.UnitPrice) AS TotalValue FROM SalesOrders so JOIN SalesOrderLines sol ON so.SOId = sol.SOId JOIN Customers c ON so.CustomerId = c.CustomerId WHERE so.SODate BETWEEN {StartDate} AND {EndDate} GROUP BY c.CustomerName ORDER BY TotalValue DESC OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY",
+        "params": {
+            "StartDate": "YYYY-MM-DD",
+            "EndDate": "YYYY-MM-DD"
+        }
+        ,
+        "answer": "Top customer between {StartDate} and {EndDate}."
+    }
+]

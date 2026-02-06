@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BarCloudTask Chat</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; background:#f5f7fa }
+      .app { max-width:800px; margin:24px auto; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06); overflow:hidden }
+      header { padding:16px 20px; background:#0b5cff; color:#fff }
+      #chat { height:400px; overflow:auto; padding:16px; background:#fafafa }
+      .msg { margin:8px 0; display:flex }
+      .msg.user { justify-content:flex-end }
+      .msg.assistant { justify-content:flex-start; flex-direction:column; align-items:flex-start }
+      .msg.assistant { justify-content:flex-start }
+      .bubble { max-width:70%; padding:10px 14px; border-radius:12px; background:#e6e9ef }
+      .bubble.user { background:#0b5cff; color:#fff }
+      .meta { font-size:12px; color:#666; margin-top:6px }
+      .sql-block { margin-top:8px; font-family:monospace; font-size:13px; background:#eef2ff; padding:8px; border-radius:6px; display:none; white-space:pre-wrap }
+      .sql-toggle { margin-left:8px; font-size:12px; padding:4px 8px; border-radius:6px; background:#fff; border:1px solid #ddd; cursor:pointer; color:#0b5cff }
+      footer { display:flex; gap:8px; padding:12px; border-top:1px solid #eee }
+      input[type=text] { flex:1; padding:10px; border:1px solid #ddd; border-radius:6px }
+      button { padding:10px 14px; border:0; background:#0b5cff; color:#fff; border-radius:6px }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <h3>BarCloudTask — Chat</h3>
+      </header>
+      <div id="chat" aria-live="polite"></div>
+      <footer>
+        <input id="message" type="text" placeholder="Type a message..." />
+        <button id="send">Send</button>
+      </footer>
+    </div>
+
+    <script>
+      // generate session id
+      function genSessionId() {
+        const a = crypto.getRandomValues(new Uint8Array(12));
+        return Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('')
+      }
+      const sessionId = genSessionId();
+
+      const chatEl = document.getElementById('chat');
+      const msgInput = document.getElementById('message');
+      const sendBtn = document.getElementById('send');
+
+      function appendMessage(text, who, meta, sql) {
+        const wrap = document.createElement('div');
+        wrap.className = 'msg ' + (who === 'user' ? 'user' : 'assistant');
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble ' + (who === 'user' ? 'user' : 'assistant');
+        bubble.textContent = text;
+        wrap.appendChild(bubble);
+        if (meta) {
+          const m = document.createElement('div');
+          m.className = 'meta';
+          m.textContent = meta;
+          wrap.appendChild(m);
+        }
+        if (sql) {
+          const btn = document.createElement('button');
+          btn.className = 'sql-toggle';
+          btn.textContent = 'Show SQL';
+          const sqlDiv = document.createElement('div');
+          sqlDiv.className = 'sql-block';
+          sqlDiv.textContent = sql;
+          btn.addEventListener('click', ()=>{
+            const visible = sqlDiv.style.display === 'block';
+            sqlDiv.style.display = visible ? 'none' : 'block';
+            btn.textContent = visible ? 'Show SQL' : 'Hide SQL';
+          });
+          wrap.appendChild(btn);
+          wrap.appendChild(sqlDiv);
+        }
+        chatEl.appendChild(wrap);
+        chatEl.scrollTop = chatEl.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const text = msgInput.value.trim();
+        if (!text) return;
+        appendMessage(text, 'user');
+        msgInput.value = '';
+        try {
+          const resp = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, message: text })
+          });
+          const data = await resp.json();
+          if (data.status === 'ok') {
+            const meta = `latency: ${data.latency_ms} ms | provider: ${data.provider || 'unknown'}`;
+            appendMessage(data.natural_language_answer || JSON.stringify(data), 'assistant', meta, data.sql_query);
+          } else {
+            appendMessage('Error: ' + (data.error || 'unknown'), 'assistant');
+          }
+        } catch (err) {
+          appendMessage('Network error: ' + err.message, 'assistant');
+        }
+      }
+
+      sendBtn.addEventListener('click', sendMessage);
+      msgInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') sendMessage(); });
+
+      // welcome message
+      appendMessage('Session: ' + sessionId, 'assistant');
+    </script>
+</body>
+</html>
